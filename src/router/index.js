@@ -78,6 +78,36 @@ export const constantRoutes = [
       }
     ]
   },
+  {
+    path: '/servManger',
+    component: Layout,
+    redirect: '/servManger/index',
+    meta: {
+      title: 'serverManager',
+      icon: 'el-icon-folder'
+    },
+    children: [
+      {
+        path: 'serverManager',
+        component: () => import('@/views/servManger/index'),
+        name: 'ServerManager',
+        meta: { title: '开服管理', icon: 'el-icon-view', noCache: true }
+      },
+      {
+        path: 'serverList',
+        component: () => import('@/views/servManger/list'),
+        name: 'ServerList',
+        meta: { title: '区服列表', icon: 'el-icon-s-tools', noCache: true }
+      },
+      {
+        path: 'zoneCfg',
+        component: () => import('@/views/servManger/zone'),
+        name: 'ZoneCfg',
+        meta: { title: '服务器-区服映射配置', icon: 'el-icon-s-tools', noCache: true }
+      }
+    ]
+  },
+
 
   {
     path: '/user',
@@ -100,7 +130,7 @@ export const constantRoutes = [
     ]
   },
 
-  {
+  /*{
     path: 'wlua',
     component: Layout,
     children: [
@@ -143,6 +173,7 @@ export const constantRoutes = [
       }
     ]
   },
+  */
 
   // 404 page must be placed at the end !!!
   { path: '*', redirect: '/404', hidden: true }
