@@ -23,8 +23,11 @@ export function query(data) {
 export function update(path, data, mode) {
   data._pth = path
   data._mode = mode
+  const url  = `/serverManager/update?`+obj2query(data)
+  delete data._pth,
+  delete data._mode
   return request({
-    url: `/serverManager/update?`+obj2query(data),
+    url,
     method: 'get'
   })
 }

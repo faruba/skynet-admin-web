@@ -55,29 +55,29 @@ export const constantRoutes = [
     }]
   },
 
-  {
-    path: '/cluster',
-    component: Layout,
-    redirect: '/cluster/index',
-    meta: {
-      title: 'cluster',
-      icon: 'el-icon-folder'
-    },
-    children: [
-      {
-        path: 'index',
-        component: () => import('@/views/cluster/index'),
-        name: 'Cluster',
-        meta: { title: 'cluster管理', icon: 'el-icon-s-tools', noCache: true }
-      },
-      {
-        path: 'status',
-        component: () => import('@/views/cluster/status'),
-        name: 'Status',
-        meta: { title: 'cluster状态', icon: 'el-icon-view', noCache: true }
-      }
-    ]
-  },
+  //{
+  //  path: '/cluster',
+  //  component: Layout,
+  //  redirect: '/cluster/index',
+  //  meta: {
+  //    title: 'cluster',
+  //    icon: 'el-icon-folder'
+  //  },
+  //  children: [
+  //    {
+  //      path: 'index',
+  //      component: () => import('@/views/cluster/index'),
+  //      name: 'Cluster',
+  //      meta: { title: 'cluster管理', icon: 'el-icon-s-tools', noCache: true }
+  //    },
+  //    {
+  //      path: 'status',
+  //      component: () => import('@/views/cluster/status'),
+  //      name: 'Status',
+  //      meta: { title: 'cluster状态', icon: 'el-icon-view', noCache: true }
+  //    }
+  //  ]
+  //},
   {
     path: '/servManger',
     component: Layout,

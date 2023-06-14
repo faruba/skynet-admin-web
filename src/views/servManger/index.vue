@@ -13,15 +13,23 @@
     </div>
     <div>
       <el-row :gutter="20">
-        <template v-for="(value, key) in modeArgs">
+        <div v-for="(value, key) in modeArgs" :key="key">
           <label>{{ key }}:</label>
-          <el-input type="" v-model="modeArgs[key]" size="small" :label="key"/>
-        </template>
+          <el-input v-model="modeArgs[key]" size="small" :formatter="toStr" :label="key" />
+        </div>
       </el-row>
+      <el-button
+            size="mini"
+            type="danger"
+            @click="showChangeArgs()"
+            >修改参数
+      </el-button>
+    </div>
+    <div>
     </div>
     <div class="content-table">
       <el-table
-        :data="serverList"
+        :data="serverData"
         :row-key="row => row.zoneId"
         border
         style="width: 100%"
@@ -31,7 +39,7 @@
       >
         <el-table-column prop="zoneId" label="区服id" align="center" sortable />
         <el-table-column prop="serverName" label="服务器名" header-align="center" sortable />
-        <el-table-column prop="activeTime" label="开服时间" align="center" sortable />
+        <el-table-column prop="activeTime" label="开服时间" align="center" :formatter="toDateStr" sortable />
         <el-table-column
         type="selection"
         label="推荐服务器"
@@ -41,9 +49,10 @@
             <el-checkbox v-model="scope.row.rec" />
         </el-table-column>
         -->
-        <el-table-column prop="online" label="在线人数" align="center" sortable />
-        <el-table-column prop="create" label="创角人数" align="center" sortable />
-        <el-table-column prop="load" label="负载" align="center" sortable />
+        <el-table-column prop="st" label="服务器状态" align="center" sortable />
+        <el-table-column prop="online" label="在线人数(online)" align="center" sortable />
+        <el-table-column prop="create" label="创角人数(create)" align="center" sortable />
+        <el-table-column prop="load" label="负载(load)" align="center" sortable />
         <el-table-column prop="op" label="操作" align="center" >
           <template slot-scope="scope">
             <el-button
@@ -54,6 +63,9 @@
           </template>
         </el-table-column>
       </el-table>
+    </div>
+    <div>
+      <el-input v-model="log" type="textarea" autosize readonly />
     </div>
     <el-dialog title="修改服务器信息" :visible.sync="updateNodeDialogVisible">
       <el-form :model="updateForm">
@@ -74,32 +86,100 @@
       </div>
     </el-dialog>
 
+    <el-dialog title="修改服务器参数" :visible.sync="chageArgsVisible">
+      将修改为: {{ JSON.stringify(this.modeArgs) }}
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="chageArgsVisible = false">取 消</el-button>
+        <el-button type="primary" @click="chengeArgs()">确 定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
 import { query, update } from '@/api/serverMgr'
+// import { response } from 'express'
 
+function mergeObj(to, from) {
+  for (let k in from) {
+    to[k] = from[k]
+  }
+}
+const stCfg = {
+  0: 'stop',
+  1: 'running',
+  2: 'unknow',
+  3: 'updating'
+}
 export default {
+  computed: {
+    serverData () {
+      let ret = []
+      for (let idx in this.serverList) {
+        let v = this.serverList[idx]
+        let temp = {}
+        mergeObj(temp, v)
+        const v2 = this.runtime[v.zoneId]
+        v2.st = stCfg[v2.st] 
+        mergeObj(temp, v2)
+        ret.push(temp)
+      }
+      return ret
+    }
+  },
   data() {
     return {
-      nodeoptions: null,
       updateNodeDialogVisible: false,
+      chageArgsVisible: false,
       updateForm: {
         zoneId: 0,
         activeTime: '',
         serverName: ''
       },
       serverList: null,
+      runtime: null,
       nodename: null,
       modeArgs: null,
-      opt: null
+      allModes: null,
+      mode: null,
+      opt: null,
+      log: null
     }
   },
   created() {
     this.fetchData()
   },
   methods: {
+    showChangeArgs() {
+      this.chageArgsVisible = true
+      if(typeof(this.modeArgs.srvs) == 'string') {
+        this.modeArgs.srvs = this.modeArgs.srvs.split(',')
+      }
+    },
+    chengeArgs() {
+      this.chageArgsVisible = false
+      update(`modeArgs.${this.mode}`, this.modeArgs,'replace').then((response) => {
+        if (response.code === 'OK') {
+          this.$message({
+            type: 'success',
+            message: '更新成功'
+          })
+          this.fetchData()
+        }
+      })
+    },
+    toStr(v) {
+      if(Array.isArray(v)) {
+        return JSON.stringify(v)
+      }
+      return v
+    },
+    toDateStr(row) {
+      return new Date(row.activeTime).toLocaleString('zh-cn',{ 
+        year: 'numeric', month: '2-digit', day: '2-digit', 
+        hour: '2-digit', minute: '2-digit', second: '2-digit' 
+      })
+    },
     selectable(row) {
       return row.rec
     },
@@ -143,8 +223,8 @@ export default {
         if (k === 'serverList') {
           v = Object.values(v)
           this.$nextTick(function() {
-            this.serverList.forEach(item => {
-              console.log(item.rec, "update")
+            this.serverData.forEach(item => {
+              console.log(item.rec, 'update')
               this.$refs.recCol.toggleRowSelection(item, item.rec)
             })
           })
@@ -155,7 +235,7 @@ export default {
       }
     },
     fetchData() {
-      query({ mode: 1, allModes: 1, modeArgs: 1, serverList: 1 }).then((response) => {
+      query({ mode: 1, allModes: 1, modeArgs: 1, serverList: 1, runtime: 1, log: 1 }).then((response) => {
         if (response.code === 'OK') {
           this.updateVal(response)
         }
